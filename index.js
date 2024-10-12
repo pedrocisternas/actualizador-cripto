@@ -86,6 +86,33 @@ async function fetchCryptocurrencies() {
           } catch (updateError) {
             console.error(`Error al actualizar el precio para ${nombre}:`, updateError.body || updateError);
           }
+        } else {
+          // Si CoinGecko falla, intentar con DEXScreener
+          if (contract.startsWith("0x")) {
+            console.log(`CoinGecko falló para ${nombre}. Intentando con DEXScreener...`);
+            const dexResult = await getPriceFromDexscreener(contract);
+            if (dexResult !== null) {
+              const { priceUsd, source } = dexResult;
+              try {
+                await notion.pages.update({
+                  page_id: page.id,
+                  properties: {
+                    "Precio Actual": {
+                      number: priceUsd,
+                    },
+                  },
+                });
+                console.log(`${nombre} - Precio Nuevo: $${priceUsd} -> ${source} (se intentó con CoinGecko)`);
+                console.log("Actualizado en Notion");
+              } catch (updateError) {
+                console.error(`Error al actualizar el precio para ${nombre}:`, updateError.body || updateError);
+              }
+            } else {
+              console.log(`No se pudo obtener el precio para ${nombre} desde ninguna fuente.`);
+            }
+          } else {
+            console.log("No hay actualización");
+          }
         }
       } else if (contract.startsWith("0x")) {
         // Si no tiene ID de CoinGecko pero tiene contrato válido, usar DEXScreener
