@@ -15,7 +15,11 @@ async function getPriceFromDexscreener(contract, retries = 3) {
       const response = await axios.get(url);
       if (response.data && response.data.pairs && response.data.pairs.length > 0) {
         const firstPair = response.data.pairs[0];
-        return { priceUsd: parseFloat(firstPair.priceUsd), source: 'DexScreener' };
+        return { 
+          priceUsd: parseFloat(firstPair.priceUsd), 
+          marketCap: firstPair.marketCap ? parseFloat(firstPair.marketCap) : null,
+          source: 'DEXScreener' 
+        };
       } else {
         console.log(`No se encontraron pares para el contrato: ${contract}`);
         return null;
@@ -36,7 +40,11 @@ async function getPriceFromCoinGecko(id) {
   try {
     const response = await axios.get(url);
     if (response.data && response.data.length > 0 && response.data[0].current_price) {
-      return { priceUsd: parseFloat(response.data[0].current_price), source: 'CoinGecko' };
+      return { 
+        priceUsd: parseFloat(response.data[0].current_price), 
+        marketCap: response.data[0].market_cap ? parseFloat(response.data[0].market_cap) : null,
+        source: 'CoinGecko' 
+      };
     } else {
       console.log(`No se encontró el precio para el ID de CoinGecko: ${id}`);
       return null;
@@ -71,13 +79,21 @@ async function fetchCryptocurrencies() {
         const result = await getPriceFromCoinGecko(idCoinGecko);
 
         if (result !== null) {
-          const { priceUsd, source } = result;
+          const { priceUsd, marketCap, source } = result;
           try {
             await notion.pages.update({
               page_id: page.id,
               properties: {
                 "Precio Actual": {
                   number: priceUsd,
+                },
+                "Market Cap": {
+                  number: marketCap,
+                },
+                "Plataforma Precio": {
+                  select: {
+                    name: source,
+                  },
                 },
               },
             });
@@ -92,13 +108,21 @@ async function fetchCryptocurrencies() {
             console.log(`CoinGecko falló para ${nombre}. Intentando con DEXScreener...`);
             const dexResult = await getPriceFromDexscreener(contract);
             if (dexResult !== null) {
-              const { priceUsd, source } = dexResult;
+              const { priceUsd, marketCap, source } = dexResult;
               try {
                 await notion.pages.update({
                   page_id: page.id,
                   properties: {
                     "Precio Actual": {
                       number: priceUsd,
+                    },
+                    "Market Cap": {
+                      number: marketCap,
+                    },
+                    "Plataforma Precio": {
+                      select: {
+                        name: source,
+                      },
                     },
                   },
                 });
@@ -120,13 +144,21 @@ async function fetchCryptocurrencies() {
         const result = await getPriceFromDexscreener(contract);
 
         if (result !== null) {
-          const { priceUsd, source } = result;
+          const { priceUsd, marketCap, source } = result;
           try {
             await notion.pages.update({
               page_id: page.id,
               properties: {
                 "Precio Actual": {
                   number: priceUsd,
+                },
+                "Market Cap": {
+                  number: marketCap,
+                },
+                "Plataforma Precio": {
+                  select: {
+                    name: source,
+                  },
                 },
               },
             });
@@ -146,3 +178,4 @@ async function fetchCryptocurrencies() {
 }
 
 fetchCryptocurrencies();
+
