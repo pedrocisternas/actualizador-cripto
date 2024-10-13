@@ -104,7 +104,7 @@ async function fetchCryptocurrencies() {
           }
         } else {
           // Si CoinGecko falla, intentar con DEXScreener
-          if (contract.startsWith("0x")) {
+          if (contract) {
             console.log(`CoinGecko falló para ${nombre}. Intentando con DEXScreener...`);
             const dexResult = await getPriceFromDexscreener(contract);
             if (dexResult !== null) {
