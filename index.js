@@ -18,7 +18,7 @@ async function getPriceFromDexscreener(contract, retries = 3) {
         return { 
           priceUsd: parseFloat(firstPair.priceUsd), 
           marketCap: firstPair.marketCap ? parseFloat(firstPair.marketCap) : null,
-          source: 'DEXScreener' 
+          source: 'DexScreener' 
         };
       } else {
         console.log(`No se encontraron pares para el contrato: ${contract}`);
